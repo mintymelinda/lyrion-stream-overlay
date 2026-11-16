@@ -5,7 +5,8 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 ## Features
 
 - Discovers Lyrion servers using the native UDP broadcast discovery request on port **3483** (`eJSON\\0`).
-- Queries server/player names and playback state through the Lyrion JSON-RPC CLI endpoint (`/jsonrpc.js`).
+- Queries server identity (including its stable UUID), player metadata, and playback state through the Lyrion JSON-RPC CLI endpoint (`/jsonrpc.js`).
+- Deduplicates multiple network addresses that resolve to the same Lyrion server.
 - Creates one overlay route per discovered server and player:
   - `http://localhost:8081/BigStorageParty/` — server landing page with links to its players.
   - `http://localhost:8081/BigStorageParty/SqueezeLite-X` — player overlay.
@@ -30,7 +31,7 @@ Open a server route to choose a player, then use its player route as an OBS brow
 http://localhost:8081/BigStorageParty/SqueezeLite-X
 ```
 
-The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied.
+The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=BigStorageParty` (or your preferred name) in `.env`.
 
 ## Docker networking and discovery
 
@@ -56,6 +57,7 @@ Copy `.env.example` to `.env` and adjust:
 | `DISCOVERY_TIMEOUT_MS` | `1500` | How long to wait for UDP discovery responses |
 | `POLL_INTERVAL_MS` | `2000` | Backend player status polling interval |
 | `LYRION_HTTP_PORT` | `9000` | Default Lyrion web/JSON-RPC port |
+| `LYRION_SERVER_NAME` | empty | Optional display-name override for deployments where Lyrion does not provide a server name |
 | `LYRION_SERVERS` | empty | Optional comma-separated server hostnames/IPs, with optional port |
 
 The overlay connects to Lyrion without credentials and performs only the read operations required for server discovery, player status, metadata and artwork. It does not expose playback controls or a generic JSON-RPC proxy. The server may still permit control commands to other unauthenticated clients; this application deliberately never sends them.
@@ -68,7 +70,7 @@ The overlay connects to Lyrion without credentials and performs only the read op
 - `/api/track?server=<server-key>&player=<player-key>` — current player status.
 - `/api/art?server=<server-key>&player=<player-key>` — proxied current album artwork.
 
-Server and player URL segments are generated from their Lyrion names (whitespace becomes hyphens). The actual route should use the resulting key if a name contains punctuation.
+Server and player URL segments are generated from their display names (whitespace becomes hyphens). The server UUID is used internally to deduplicate multiple discovered addresses; it is not exposed in the route. If distinct servers share a display name, a short identity suffix is added to keep their routes unique. The actual route should use the resulting key if a name contains punctuation.
 
 ## Development
 
