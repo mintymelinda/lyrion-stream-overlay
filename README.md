@@ -56,7 +56,6 @@ Copy `.env.example` to `.env` and adjust:
 | `DISCOVERY_INTERVAL_MS` | `30000` | Time between server discovery scans |
 | `DISCOVERY_TIMEOUT_MS` | `1500` | How long to wait for UDP discovery responses |
 | `BROWSER_POLL_INTERVAL_MS` | `500` | Browser overlay player-status polling interval in milliseconds |
-| `BROWSER_POLL_INTERVAL_MS` | `500` | Browser overlay player-status polling interval in milliseconds |
 | `POLL_INTERVAL_MS` | `2000` | Backend player status polling interval |
 | `LYRION_HTTP_PORT` | `9000` | Default Lyrion web/JSON-RPC port |
 | `LYRION_SERVER_NAME` | empty | Optional display-name override for deployments where Lyrion does not provide a server name |
@@ -86,8 +85,8 @@ node src/server.js
 
 The application uses only Node.js built-in modules and browser APIs. No install/build command is required. Run `npm test` to execute the automated tests.
 
-## Notes
+## Support me
 
-- Discovery is based on Lyrion's LAN UDP broadcast protocol. Some VLANs, Wi-Fi client isolation, firewalls, and container network modes block broadcast discovery; use `LYRION_SERVERS` in those environments.
-- Browser overlay updates are driven by backend JSON-RPC polling, configurable with `BROWSER_POLL_INTERVAL_MS` (default `500` ms), while elapsed time is animated client-side every 250 ms.
-- Artwork is proxied through this service so the OBS browser source does not need direct access to the Lyrion server.
+If you find this project useful, you can support its development with a donation:
+
+[Donate via PayPal](https://www.paypal.me/kimmynightmare)
