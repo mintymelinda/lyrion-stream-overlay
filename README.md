@@ -7,7 +7,7 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 - Discovers Lyrion servers using the native UDP broadcast discovery request on port **3483** (`eJSON\0`).
 - Queries server/player names and playback state through the Lyrion JSON-RPC CLI endpoint (`/jsonrpc.js`).
 - Creates one overlay route per discovered server and player:
-  - `http://localhost:8080/BigStorageParty/` — server landing route (player list is available from `/api/servers`).
+  - `http://localhost:8080/BigStorageParty/` — server landing page with links to its players.
   - `http://localhost:8080/BigStorageParty/SqueezeLite-X` — player overlay.
 - Displays album art, track title, artist, elapsed time, remaining time, and a progress bar.
 - Polls player status every two seconds; the browser animates progress locally between updates.
@@ -21,7 +21,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Open `http://localhost:8080/` to verify the service. Use the discovered server and player names in the overlay URL, for example:
+Open a server route to choose a player, then use its player route as an OBS browser source, for example:
 
 ```
 http://localhost:8080/BigStorageParty/SqueezeLite-X
@@ -60,7 +60,7 @@ The credentials apply to all configured/discovered servers. Keep `.env` private;
 
 ## Routes and API
 
-- `/` — service landing / health-oriented entry page.
+- `/` — default waiting page; open a discovered server route to choose a player.
 - `/health` — container health check.
 - `/api/servers` — discovered servers and players.
 - `/api/track?server=<server-key>&player=<player-key>` — current player status.
