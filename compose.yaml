@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${PORT:-8080}:${PORT:-8080}"
-    # UDP broadcast discovery needs LAN access. On Linux, the most reliable
-    # option is host networking; remove the ports mapping when enabling it.
+      - "${PORT:-8080}:8080"
+    # UDP broadcast discovery needs LAN access. On Linux, host networking is
+    # the most reliable option; remove ports when enabling network_mode: host.
     # network_mode: host

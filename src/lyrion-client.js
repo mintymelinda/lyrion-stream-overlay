@@ -44,8 +44,12 @@ class LyrionClient {
   }
 
   async serverName() {
-    const result = await this.request(0, ["serverstatus", "0", "1"]);
-    return decode(result._server_name || result.server_name || result.name || this.host);
+    const status = await this.request(0, ["serverstatus", "0", "1"]);
+    const preference = await this.request(0, ["pref", "servername", "?"]);
+    return decode(
+      status.servername || status.server_name || status.name ||
+      preference._ || preference.value || preference.servername || this.host,
+    );
   }
 
   async players() {
@@ -55,15 +59,16 @@ class LyrionClient {
   }
 
   async status(playerId) {
-    const result = await this.request(playerId, ["status", "-", "1", "tags:gal"]);
+    const result = await this.request(playerId, ["status", "-", "1", "tags:tal"]);
+    const current = Array.isArray(result.playlist_loop) ? result.playlist_loop[0] || {} : {};
     return {
-      title: decode(result.title || result.current_title || ""),
-      artist: decode(result.artist || ""),
-      album: decode(result.album || ""),
+      title: decode(result.title || current.title || result.current_title || ""),
+      artist: decode(result.artist || current.artist || ""),
+      album: decode(result.album || current.album || ""),
       mode: result.mode || "stop",
       elapsed: Math.max(0, Number(result.time) || 0),
-      duration: Math.max(0, Number(result.duration) || 0),
-      trackId: String(result.id || result.track_id || ""),
+      duration: Math.max(0, Number(result.duration || current.duration) || 0),
+      trackId: String(result.id || current.id || result.track_id || ""),
       updatedAt: Date.now(),
     };
   }
