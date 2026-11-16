@@ -29,7 +29,6 @@
     if (!player) throw new Error(`Waiting for player “${requestedPlayer}”…`);
     state.server = server.key;
     state.player = player.key;
-    byId("server-player").textContent = `${server.name} / ${player.name}`;
   }
 
   async function poll() {
