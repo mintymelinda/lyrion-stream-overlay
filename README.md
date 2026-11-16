@@ -9,7 +9,7 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 - Deduplicates multiple network addresses that resolve to the same Lyrion server.
 - Creates one overlay route per discovered server and player:
   - `http://localhost:8081/<LyrionServerName>/` — server landing page with links to its players.
-  - `http://localhost:8081/<LyrionServerName>/SqueezeLite-X` — player overlay.
+  - `http://localhost:8081/<LyrionServerName>/<LyrionPlayerName>` — player overlay.
 - Displays album art, track title, artist, elapsed time, remaining time, and a progress bar.
 - Polls player status at a configurable browser interval (500 ms by default); the browser animates progress locally between updates.
 - Re-discovers servers periodically and automatically recovers when a server/player returns.
@@ -28,7 +28,7 @@ docker-compose -f docker-compose.yaml up -d --build
 Open a server route to choose a player, then use its player route as an OBS browser source, for example:
 
 ```
-http://localhost:8081/<LyrionServerName>/SqueezeLite-X
+http://localhost:8081/<LyrionServerName>/<LyrionPlayerName>
 ```
 
 The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your single Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=<LyrionServerName>` (or your preferred name) in `.env`. This override is global and is intended for single-server deployments.
