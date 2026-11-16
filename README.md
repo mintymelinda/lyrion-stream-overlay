@@ -4,7 +4,7 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 
 ## Features
 
-- Discovers Lyrion servers using the native UDP broadcast discovery request on port **3483** (`eJSON\0`).
+- Discovers Lyrion servers using the native UDP broadcast discovery request on port **3483** (`eJSON\\0`).
 - Queries server/player names and playback state through the Lyrion JSON-RPC CLI endpoint (`/jsonrpc.js`).
 - Creates one overlay route per discovered server and player:
   - `http://localhost:8080/BigStorageParty/` — server landing page with links to its players.
@@ -16,9 +16,11 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 
 ## Quick start
 
+This project supports the standalone legacy Docker Compose command:
+
 ```sh
 cp .env.example .env
-docker compose up -d --build
+docker-compose -f docker-compose.yaml up -d --build
 ```
 
 Open a server route to choose a player, then use its player route as an OBS browser source, for example:
@@ -31,7 +33,7 @@ The first discovery scan runs at startup. Allow a few seconds for servers to res
 
 ## Docker networking and discovery
 
-Lyrion's broadcast discovery uses UDP port 3483. Docker's default bridge network does not reliably forward LAN broadcast packets. For Linux hosts, the most reliable configuration is host networking: uncomment `network_mode: host` in `compose.yaml` and remove the `ports` mapping (the service listens on `PORT`, default 8080). With host networking, the container shares the host network namespace.
+Lyrion's broadcast discovery uses UDP port 3483. Docker's default bridge network does not reliably forward LAN broadcast packets. For Linux hosts, the most reliable configuration is host networking: uncomment `network_mode: host` in `docker-compose.yaml` and remove the `ports` mapping (the service listens on `PORT`, default 8080). With host networking, the container shares the host network namespace.
 
 If host networking is unavailable (including some Docker Desktop configurations), set `LYRION_SERVERS` in `.env` to a comma-separated list of Lyrion server addresses, for example:
 
