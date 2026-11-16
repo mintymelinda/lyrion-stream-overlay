@@ -1,5 +1,12 @@
 const config = require("./config");
 
+const READ_ONLY_COMMANDS = new Set([
+  JSON.stringify(["serverstatus", "0", "1"]),
+  JSON.stringify(["pref", "servername", "?"]),
+  JSON.stringify(["players", "0", "100"]),
+  JSON.stringify(["status", "-", "1", "tags:galtd"]),
+]);
+
 function decode(value = "") {
   try {
     return decodeURIComponent(String(value).replace(/\+/g, "%20"));
@@ -15,18 +22,18 @@ class LyrionClient {
     this.baseUrl = `http://${host.includes(":") && !host.startsWith("[") ? `[${host}]` : host}:${port}`;
   }
 
-  async request(playerId, command, timeoutMs = 3500) {
+  async #query(playerId, command, timeoutMs = 3500) {
+    if (!READ_ONLY_COMMANDS.has(JSON.stringify(command))) {
+      throw new Error("Unsupported Lyrion query; only approved read-only operations are allowed");
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const headers = { "content-type": "application/json" };
-    if (config.username || config.password) {
-      headers.authorization = `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`;
-    }
 
     try {
       const response = await fetch(`${this.baseUrl}/jsonrpc.js`, {
         method: "POST",
-        headers,
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({
           id: 1,
           method: "slim.request",
@@ -44,8 +51,8 @@ class LyrionClient {
   }
 
   async serverName() {
-    const status = await this.request(0, ["serverstatus", "0", "1"]);
-    const preference = await this.request(0, ["pref", "servername", "?"]);
+    const status = await this.#query(0, ["serverstatus", "0", "1"]);
+    const preference = await this.#query(0, ["pref", "servername", "?"]);
     return decode(
       status.servername || status.server_name || status.name ||
       preference._ || preference.value || preference.servername || this.host,
@@ -53,13 +60,13 @@ class LyrionClient {
   }
 
   async players() {
-    const result = await this.request(0, ["players", "0", "100"]);
+    const result = await this.#query(0, ["players", "0", "100"]);
     const list = result.players_loop || result.players || [];
     return Array.isArray(list) ? list : [];
   }
 
   async status(playerId) {
-    const result = await this.request(playerId, ["status", "-", "1", "tags:tal"]);
+    const result = await this.#query(playerId, ["status", "-", "1", "tags:galtd"]);
     const current = Array.isArray(result.playlist_loop) ? result.playlist_loop[0] || {} : {};
     return {
       title: decode(result.title || current.title || result.current_title || ""),
