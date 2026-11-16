@@ -4,7 +4,7 @@
   const params = window.location.pathname.split("/").filter(Boolean);
   const requestedServer = params[0] || "";
   const requestedPlayer = params[1] || "";
-  const POLL_MS = 2000;
+  const DEFAULT_POLL_MS = 500;
 
   function formatTime(seconds) {
     const value = Math.max(0, Math.floor(seconds));
@@ -67,7 +67,22 @@
     byId("progress-fill").style.width = `${duration > 0 ? Math.min(100, elapsed / duration * 100) : 0}%`;
   }
 
-  poll();
-  setInterval(poll, POLL_MS);
-  setInterval(renderProgress, 250);
+  async function start() {
+    let pollIntervalMs = DEFAULT_POLL_MS;
+    try {
+      const response = await fetch("/api/config", { cache: "no-store" });
+      if (response.ok) {
+        const config = await response.json();
+        const configuredInterval = Number(config.browserPollIntervalMs);
+        if (Number.isFinite(configuredInterval) && configuredInterval > 0) pollIntervalMs = configuredInterval;
+      }
+    } catch {
+      // Keep the browser usable with the default interval if configuration cannot be loaded.
+    }
+    poll();
+    setInterval(poll, pollIntervalMs);
+    setInterval(renderProgress, 250);
+  }
+
+  start();
 })();
