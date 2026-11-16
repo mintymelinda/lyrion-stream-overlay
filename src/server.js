@@ -53,11 +53,7 @@ async function handle(request, response) {
     const match = registry.find(url.searchParams.get("server"), url.searchParams.get("player"));
     if (!match) return sendJson(response, 404, { error: "Player not found" });
     try {
-      const headers = {};
-      if (config.username || config.password) {
-        headers.authorization = `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`;
-      }
-      const artwork = await fetch(match.server.client.artworkUrl(match.player.id), { headers, signal: AbortSignal.timeout(5000) });
+      const artwork = await fetch(match.server.client.artworkUrl(match.player.id), { signal: AbortSignal.timeout(5000) });
       if (!artwork.ok) return sendJson(response, 404, { error: "Artwork unavailable" });
       response.writeHead(artwork.status, {
         "content-type": artwork.headers.get("content-type") || "image/jpeg",

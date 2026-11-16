@@ -8,8 +8,6 @@ module.exports = {
   discoveryIntervalMs: number(process.env.DISCOVERY_INTERVAL_MS, 30_000),
   discoveryTimeoutMs: number(process.env.DISCOVERY_TIMEOUT_MS, 1_500),
   lyrionHttpPort: number(process.env.LYRION_HTTP_PORT, 9000),
-  username: process.env.LYRION_USERNAME || "",
-  password: process.env.LYRION_PASSWORD || "",
   configuredServers: (process.env.LYRION_SERVERS || "")
     .split(",")
     .map((entry) => entry.trim())
