@@ -31,7 +31,7 @@ Open a server route to choose a player, then use its player route as an OBS brow
 http://localhost:8081/BigStorageParty/SqueezeLite-X
 ```
 
-The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=BigStorageParty` (or your preferred name) in `.env`.
+The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your single Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=BigStorageParty` (or your preferred name) in `.env`. This override is global and is intended for single-server deployments.
 
 ## Docker networking and discovery
 
