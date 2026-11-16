@@ -33,6 +33,7 @@ function sendOverlay(response) {
 async function handle(request, response) {
   const url = new URL(request.url, "http://localhost");
   if (url.pathname === "/health") return sendJson(response, 200, { status: "ok" });
+  if (url.pathname === "/api/config") return sendJson(response, 200, { browserPollIntervalMs: config.browserPollIntervalMs });
   if (url.pathname === "/api/servers") return sendJson(response, 200, registry.list());
 
   if (url.pathname === "/api/track") {
