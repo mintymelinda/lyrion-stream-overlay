@@ -26,6 +26,7 @@ function discoverBroadcast() {
       found.set(remote.address, {
         host: remote.address,
         port: announcedPort > 0 && announcedPort < 65536 ? announcedPort : config.lyrionHttpPort,
+        source: "broadcast",
       });
     });
 
@@ -44,12 +45,12 @@ function discoverBroadcast() {
 
 async function discoverServers() {
   const discovered = await discoverBroadcast();
-  const merged = new Map(discovered.map((server) => [server.host, server]));
+  const merged = new Map(discovered.map((server) => [`${server.host}:${server.port}`, server]));
   for (const entry of config.configuredServers) {
-    const server = parseConfiguredServer(entry);
-    merged.set(server.host, server);
+    const server = { ...parseConfiguredServer(entry), source: "configured" };
+    merged.set(`${server.host}:${server.port}`, server);
   }
   return [...merged.values()];
 }
 
-module.exports = { discoverServers };
+module.exports = { discoverServers, parseConfiguredServer };
