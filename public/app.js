@@ -14,6 +14,31 @@
     return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}` : `${minutes}:${String(remainder).padStart(2, "0")}`;
   }
 
+  function setScrollingText(element, value) {
+    const text = value || "";
+    if (element.dataset.text === text) return;
+    element.dataset.text = text;
+    element.classList.remove("is-overflowing");
+    element.replaceChildren();
+
+    const track = document.createElement("span");
+    track.className = "marquee-track";
+    const first = document.createElement("span");
+    first.className = "marquee-item";
+    first.textContent = text;
+    track.append(first);
+    element.append(track);
+
+    requestAnimationFrame(() => {
+      if (first.scrollWidth <= element.clientWidth) return;
+      const duplicate = first.cloneNode(true);
+      duplicate.setAttribute("aria-hidden", "true");
+      track.append(duplicate);
+      element.style.setProperty("--scroll-duration", `${Math.max(8, (first.scrollWidth + 32) / 35)}s`);
+      element.classList.add("is-overflowing");
+    });
+  }
+
   function showError(message) {
     byId("error").hidden = !message;
     byId("error").textContent = message || "";
@@ -29,7 +54,6 @@
     if (!player) throw new Error(`Waiting for player “${requestedPlayer}”…`);
     state.server = server.key;
     state.player = player.key;
-    byId("server-player").textContent = `${server.name} / ${player.name}`;
   }
 
   async function poll() {
@@ -43,8 +67,8 @@
         state.track.title !== track.title || state.track.artist !== track.artist;
       state.track = track;
       state.receivedAt = Date.now();
-      byId("title").textContent = track.title || (track.mode === "stop" ? "Nothing playing" : "Unknown track");
-      byId("artist").textContent = track.artist || track.album || "";
+      setScrollingText(byId("title"), track.title || (track.mode === "stop" ? "Nothing playing" : "Unknown track"));
+      setScrollingText(byId("artist"), track.artist || track.album || "");
       if (changed && track.artwork) byId("artwork").src = track.artwork;
       byId("artwork").onerror = () => { byId("artwork").src = "/placeholder.svg"; };
       showError("");
