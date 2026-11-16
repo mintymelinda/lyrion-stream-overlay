@@ -1,0 +1,13 @@
+services:
+  lyrion-stream-overlay:
+    build: .
+    image: lyrion-stream-overlay:latest
+    container_name: lyrion-stream-overlay
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    # UDP broadcast discovery needs LAN access. On Linux, host networking is
+    # the most reliable option; remove the ports mapping when enabling it.
+    # network_mode: host

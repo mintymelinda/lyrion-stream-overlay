@@ -1,0 +1,13 @@
+{
+  "name": "lyrion-stream-overlay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lightweight Docker browser overlay for Lyrion Music Server players",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
