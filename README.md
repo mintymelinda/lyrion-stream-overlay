@@ -8,8 +8,8 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
 - Queries server identity (including its stable UUID), player metadata, and playback state through the Lyrion JSON-RPC CLI endpoint (`/jsonrpc.js`).
 - Deduplicates multiple network addresses that resolve to the same Lyrion server.
 - Creates one overlay route per discovered server and player:
-  - `http://localhost:8081/BigStorageParty/` — server landing page with links to its players.
-  - `http://localhost:8081/BigStorageParty/SqueezeLite-X` — player overlay.
+  - `http://localhost:8081/<LyrionServerName>/` — server landing page with links to its players.
+  - `http://localhost:8081/<LyrionServerName>/SqueezeLite-X` — player overlay.
 - Displays album art, track title, artist, elapsed time, remaining time, and a progress bar.
 - Polls player status at a configurable browser interval (500 ms by default); the browser animates progress locally between updates.
 - Re-discovers servers periodically and automatically recovers when a server/player returns.
@@ -28,10 +28,10 @@ docker-compose -f docker-compose.yaml up -d --build
 Open a server route to choose a player, then use its player route as an OBS browser source, for example:
 
 ```
-http://localhost:8081/BigStorageParty/SqueezeLite-X
+http://localhost:8081/<LyrionServerName>/SqueezeLite-X
 ```
 
-The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your single Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=BigStorageParty` (or your preferred name) in `.env`. This override is global and is intended for single-server deployments.
+The first discovery scan runs at startup. Allow a few seconds for servers to respond. The default host port is 8081; change `HOST_PORT` in `.env` if that port is occupied. If your single Lyrion server does not publish a display name, set `LYRION_SERVER_NAME=<LyrionServerName>` (or your preferred name) in `.env`. This override is global and is intended for single-server deployments.
 
 ## Docker networking and discovery
 
@@ -40,7 +40,7 @@ Lyrion's broadcast discovery uses UDP port 3483. Docker's default bridge network
 If host networking is unavailable (including some Docker Desktop configurations), set `LYRION_SERVERS` in `.env` to a comma-separated list of Lyrion server addresses, for example:
 
 ```dotenv
-LYRION_SERVERS=192.168.1.20,192.168.1.21:9001
+LYRION_SERVERS=lyrion-server.local,lyrion-server-2.local:9001
 ```
 
 This bypasses broadcast discovery and directly queries the configured servers. The container still needs network access to each server's HTTP port.
@@ -52,9 +52,10 @@ Copy `.env.example` to `.env` and adjust:
 | Variable | Default | Description |
 | --- | ---: | --- |
 | `PORT` | `8080` | HTTP port inside the container; leave at 8080 with the supplied bridge-network mapping |
-| `HOST_PORT` | `8081` | NAS/host port published by Docker Compose; change this if the port is occupied |
+| `HOST_PORT` | `8081` | host port published by Docker Compose; change this if the port is occupied |
 | `DISCOVERY_INTERVAL_MS` | `30000` | Time between server discovery scans |
 | `DISCOVERY_TIMEOUT_MS` | `1500` | How long to wait for UDP discovery responses |
+| `BROWSER_POLL_INTERVAL_MS` | `500` | Browser overlay player-status polling interval in milliseconds |
 | `BROWSER_POLL_INTERVAL_MS` | `500` | Browser overlay player-status polling interval in milliseconds |
 | `POLL_INTERVAL_MS` | `2000` | Backend player status polling interval |
 | `LYRION_HTTP_PORT` | `9000` | Default Lyrion web/JSON-RPC port |
@@ -67,6 +68,7 @@ The overlay connects to Lyrion without credentials and performs only the read op
 
 - `/` — default waiting page; open a discovered server route to choose a player.
 - `/health` — container health check.
+- `/api/config` — browser polling configuration.
 - `/api/servers` — discovered servers and players.
 - `/api/track?server=<server-key>&player=<player-key>` — current player status.
 - `/api/art?server=<server-key>&player=<player-key>` — proxied current album artwork.
