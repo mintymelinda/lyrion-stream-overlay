@@ -50,13 +50,27 @@ class LyrionClient {
     }
   }
 
-  async serverName() {
+  async serverInfo() {
     const status = await this.#query(0, ["serverstatus", "0", "1"]);
-    const preference = await this.#query(0, ["pref", "servername", "?"]);
-    return decode(
-      status.servername || status.server_name || status.name ||
-      preference._ || preference.value || preference.servername || this.host,
-    );
+    let preference = {};
+    try {
+      preference = await this.#query(0, ["pref", "servername", "?"]);
+    } catch {
+      // Server naming is optional; UUID and player discovery remain usable.
+    }
+
+    const name = status.servername || status.server_name || status.name ||
+      preference._ || preference.value || preference.servername || this.host;
+    const uuid = status.uuid || status.server_uuid || "";
+
+    return {
+      name: decode(name),
+      uuid: String(uuid).trim(),
+    };
+  }
+
+  async serverName() {
+    return (await this.serverInfo()).name;
   }
 
   async players() {
