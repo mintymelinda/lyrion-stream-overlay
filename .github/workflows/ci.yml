@@ -12,12 +12,12 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Check JavaScript syntax
@@ -31,7 +31,7 @@ jobs:
 
   publish:
     name: Build, publish, and archive Docker image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test
     if: >-
       github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
@@ -39,12 +39,12 @@ jobs:
       contents: write
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Generate image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: mintymelinda/lyrion-stream-overlay
           tags: |
@@ -53,7 +53,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
       - name: Build Docker image for publishing and export
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -66,7 +66,7 @@ jobs:
           docker save mintymelinda/lyrion-stream-overlay:build | gzip --no-name > "$archive"
           echo "IMAGE_ARCHIVE=$archive" >> "$GITHUB_ENV"
       - name: Upload Docker image as workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lyrion-stream-overlay-linux-amd64-${{ github.ref_name }}
           path: ${{ env.IMAGE_ARCHIVE }}
@@ -88,7 +88,7 @@ jobs:
 
           gh release upload "$GITHUB_REF_NAME" "$IMAGE_ARCHIVE" --clobber
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
