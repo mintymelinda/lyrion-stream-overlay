@@ -30,22 +30,19 @@ jobs:
         run: docker build --tag lyrion-stream-overlay:test .
 
   publish:
-    name: Build and publish Docker image
+    name: Build, publish, and archive Docker image
     runs-on: ubuntu-latest
     needs: test
     if: >-
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Generate image metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -56,11 +53,52 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-      - name: Build and push Docker image
+      - name: Build Docker image for publishing and export
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          load: true
+          tags: mintymelinda/lyrion-stream-overlay:build
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Save Docker image archive
+        run: |
+          archive="lyrion-stream-overlay-linux-amd64-${GITHUB_REF_NAME}.tar.gz"
+          docker save mintymelinda/lyrion-stream-overlay:build | gzip --no-name > "$archive"
+          echo "IMAGE_ARCHIVE=$archive" >> "$GITHUB_ENV"
+      - name: Upload Docker image as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lyrion-stream-overlay-linux-amd64-${{ github.ref_name }}
+          path: ${{ env.IMAGE_ARCHIVE }}
+          if-no-files-found: error
+          retention-days: 90
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Push image tags to Docker Hub
+        env:
+          DOCKER_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker tag mintymelinda/lyrion-stream-overlay:build "$tag"
+            docker push "$tag"
+          done <<< "$DOCKER_TAGS"
+      - name: Create or update GitHub Release and attach image
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --latest
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --verify-tag \
+              --generate-notes \
+              --latest
+          fi
+
+          gh release upload "$GITHUB_REF_NAME" "$IMAGE_ARCHIVE" --clobber
