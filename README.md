@@ -11,7 +11,7 @@ A lightweight Docker-hosted browser source for showing the currently playing tra
   - `http://localhost:8081/BigStorageParty/` — server landing page with links to its players.
   - `http://localhost:8081/BigStorageParty/SqueezeLite-X` — player overlay.
 - Displays album art, track title, artist, elapsed time, remaining time, and a progress bar.
-- Polls player status every two seconds; the browser animates progress locally between updates.
+- Polls player status at a configurable browser interval (500 ms by default); the browser animates progress locally between updates.
 - Re-discovers servers periodically and automatically recovers when a server/player returns.
 - No npm dependencies or frontend build step.
 - Uses unauthenticated, read-only Lyrion queries; no Lyrion credentials are required.
@@ -55,6 +55,7 @@ Copy `.env.example` to `.env` and adjust:
 | `HOST_PORT` | `8081` | NAS/host port published by Docker Compose; change this if the port is occupied |
 | `DISCOVERY_INTERVAL_MS` | `30000` | Time between server discovery scans |
 | `DISCOVERY_TIMEOUT_MS` | `1500` | How long to wait for UDP discovery responses |
+| `BROWSER_POLL_INTERVAL_MS` | `500` | Browser overlay player-status polling interval in milliseconds |
 | `POLL_INTERVAL_MS` | `2000` | Backend player status polling interval |
 | `LYRION_HTTP_PORT` | `9000` | Default Lyrion web/JSON-RPC port |
 | `LYRION_SERVER_NAME` | empty | Optional display-name override for deployments where Lyrion does not provide a server name |
@@ -86,5 +87,5 @@ The application uses only Node.js built-in modules and browser APIs. No install/
 ## Notes
 
 - Discovery is based on Lyrion's LAN UDP broadcast protocol. Some VLANs, Wi-Fi client isolation, firewalls, and container network modes block broadcast discovery; use `LYRION_SERVERS` in those environments.
-- Browser overlay updates are driven by backend JSON-RPC polling, while elapsed time is animated client-side every 250 ms.
+- Browser overlay updates are driven by backend JSON-RPC polling, configurable with `BROWSER_POLL_INTERVAL_MS` (default `500` ms), while elapsed time is animated client-side every 250 ms.
 - Artwork is proxied through this service so the OBS browser source does not need direct access to the Lyrion server.
