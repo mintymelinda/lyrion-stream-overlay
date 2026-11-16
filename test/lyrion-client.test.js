@@ -65,19 +65,42 @@ test("players uses the read-only players query without authentication", async (t
   assert.deepEqual(request.headers, { "content-type": "application/json" });
 });
 
-test("server name lookup uses only read-only queries", async (t) => {
+test("serverInfo extracts UUID and falls back when Lyrion omits its display name", async (t) => {
   const originalFetch = global.fetch;
   t.after(() => { global.fetch = originalFetch; });
   const commands = [];
   global.fetch = async (url, options) => {
-    commands.push(JSON.parse(options.body).params[1]);
-    const result = commands.length === 1 ? { servername: "BigStorageParty" } : { _: "Ignored fallback" };
+    const command = JSON.parse(options.body).params[1];
+    commands.push(command);
+    const result = command[0] === "serverstatus"
+      ? { uuid: "423047be-4c80-4b78-a845-8acf440ca965", ip: "172.20.0.5", httpport: "9000" }
+      : { _p2: null };
     return { ok: true, json: async () => ({ result }) };
   };
 
   const client = new LyrionClient("192.0.2.10");
-  assert.equal(await client.serverName(), "BigStorageParty");
+  assert.deepEqual(await client.serverInfo(), {
+    name: "192.0.2.10",
+    uuid: "423047be-4c80-4b78-a845-8acf440ca965",
+  });
   assert.deepEqual(commands, [["serverstatus", "0", "1"], ["pref", "servername", "?"]]);
+});
+
+test("serverInfo keeps working when the optional preference query fails", async (t) => {
+  const originalFetch = global.fetch;
+  t.after(() => { global.fetch = originalFetch; });
+  global.fetch = async (url, options) => {
+    const command = JSON.parse(options.body).params[1];
+    if (command[0] === "pref") throw new Error("preference unavailable");
+    return {
+      ok: true,
+      json: async () => ({ result: { uuid: "server-uuid", servername: "Music Server" } }),
+    };
+  };
+
+  const client = new LyrionClient("192.0.2.10");
+  assert.deepEqual(await client.serverInfo(), { name: "Music Server", uuid: "server-uuid" });
+  assert.equal(await client.serverName(), "Music Server");
 });
 
 test("artwork URL is a direct read-only cover request", () => {
