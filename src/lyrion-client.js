@@ -44,7 +44,7 @@ class LyrionClient {
   }
 
   async serverName() {
-    const result = await this.request(0, ["info", "server_name", "?"]);
+    const result = await this.request(0, ["serverstatus", "0", "1"]);
     return decode(result._server_name || result.server_name || result.name || this.host);
   }
 
